@@ -63,6 +63,37 @@ class TestFileSystemAccess(FileSystemAccess):
                 return None
         return node
 
+def test_normal_slides1():
+    # Prepare a TestFileSystemAccess
+    root = FileSim('/root/aaa', True, [
+        FileSim('dir1@wg1@dur5', True, [
+            FileSim('slide1.jpg', False, mod_time=datetime.now()),
+            FileSim('slide2.jpg', False, mod_time=datetime.now())
+        ]),
+        FileSim('dir2@wg1.5@dur7', True, [
+            FileSim('slide3.jpg', False, mod_time=datetime.now()),
+            FileSim('slide4.jpg', False, mod_time=datetime.now())
+        ])
+    ])
+    fs_access = TestFileSystemAccess(root, datetime.now())
+
+    # Call the collect function
+    slide_collection = SlidesCollection()
+    collect_slides(slide_collection, '/root/aaa', fs_access=fs_access)
+
+    # Verify the result
+    self.assertEqual(len(slide_collection.normalSlides), 2)
+    self.assertEqual(len(slide_collection.normalSlides[1.0]), 2)
+    self.assertEqual(len(slide_collection.normalSlides[1.5]), 2)
+    self.assertEqual(slide_collection.normalSlides[1.0][0].file, 'dir1@wg1/slide1@dur5.jpg')
+    self.assertEqual(slide_collection.normalSlides[1.0][0].duration, datetime.timedelta(seconds=5))
+    self.assertEqual(slide_collection.normalSlides[1.0][1].file, 'dir1@wg1/slide2@dur7.jpg')
+    self.assertEqual(slide_collection.normalSlides[1.0][1].duration, datetime.timedelta(seconds=7))
+    self.assertEqual(slide_collection.normalSlides[1.5][0].file, 'dir2@wg1.5/slide3@dur5.jpg')
+    self.assertEqual(slide_collection.normalSlides[1.5][0].duration, datetime.timedelta(seconds=5))
+    self.assertEqual(slide_collection.normalSlides[1.5][1].file, 'dir2@wg1.5/slide4@dur7.jpg')
+    self.assertEqual(slide_collection.normalSlides[1.5][1].duration, datetime.timedelta(seconds=7))
+
 def test_expired_slides():
     # Prepare a TestFileSystemAccess
     current_time = datetime.now()
@@ -102,5 +133,5 @@ def test_expired_slides():
     assert slide_collection.normalSlides[1.5][1].duration == datetime.timedelta(seconds=7)
 
 if __name__ == '__main__':
-    test_normal_slides()
+    test_normal_slides1()
     test_expired_slides()
