@@ -179,27 +179,28 @@ class SlidesCollection:
   
   def addError(self, file: str, error: str) -> None:
     self.errors.append(SlideError(file, error))
+
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '', 
                    show_config: ShowConfig = ShowConfig()) -> None:
-    for name in os.listdir(root_dir):
-        path: str = os.path.join(root_dir, name)
-        relative_path_name: str = os.path.join(relative_path, name)
+  for name in os.listdir(root_dir):
+      path: str = os.path.join(root_dir, name)
+      relative_path_name: str = os.path.join(relative_path, name)
 
-        if os.path.isdir(path):
-            # If path is a directory, recurse into it
-            collect_slides(slide_collection, path, relative_path_name, show_config.deep_copy())
-        else:
-            new_config : ShowConfig = show_config.deep_copy()            
-            try:
-              #extract file suffix
-              suffix : str = os.path.splitext(path)[1]
-              if suffix not in image_suffixes:
-                raise ValueError("File suffix " + suffix + " is not an image suffix")
-              new_config.override(parseFileNameForConfig(path,
-                                                  datetime.datetime.fromtimestamp(os.path.getmtime(path))))
-              slide_collection.addSlide(relative_path_name, new_config)
-            except ValueError as e:
-              slide_collection.addError(relative_path_name, str(e))
+      if os.path.isdir(path):
+          # If path is a directory, recurse into it
+          collect_slides(slide_collection, path, relative_path_name, show_config.deep_copy())
+      else:
+          new_config : ShowConfig = show_config.deep_copy()            
+          try:
+            #extract file suffix
+            suffix : str = os.path.splitext(path)[1]
+            if suffix not in image_suffixes:
+              raise ValueError("File suffix " + suffix + " is not an image suffix")
+            new_config.override(parseFileNameForConfig(path,
+                                                datetime.datetime.fromtimestamp(os.path.getmtime(path))))
+            slide_collection.addSlide(relative_path_name, new_config)
+          except ValueError as e:
+            slide_collection.addError(relative_path_name, str(e))
 
       
       
