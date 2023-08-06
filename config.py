@@ -155,26 +155,30 @@ class OvershadowSlideCollection:
 class SlideError:
   file: str
   error: str
+from collections import OrderedDict
+
+@dataclass
+class NormalSlideCollection:
+  file: str
+  duration: datetime.timedelta
 
 @dataclass
 class SlidesCollection:
-  normalSlides: List[NormalSlideCollection]
-  totalWeight: float
+  normalSlides: OrderedDict[float, List[NormalSlideCollection]]
   overshadowSlides: List[OvershadowSlideCollection]
   errors: List[SlideError]
   def addSlide(self, file: str, show_config: ShowConfig) -> None:
     new_config : ShowConfig = show_config.deep_copy()
     new_config.fillUnspecifiedShowConfigWithDefaults()
     if isinstance(new_config.specializedConfig, ChooseSlideConfig):
-      self.normalSlides.append(NormalSlideCollection(file, new_config.specializedConfig.weight, new_config.duration))
-      self.totalWeight += new_config.specializedConfig.weight
+      if new_config.specializedConfig.weight not in self.normalSlides:
+        self.normalSlides[new_config.specializedConfig.weight] = []
+      self.normalSlides[new_config.specializedConfig.weight].append(NormalSlideCollection(file, new_config.duration))
     else:
       self.overshadowSlides.append(OvershadowSlideCollection(file, new_config.specializedConfig.frequency, new_config.duration))
   
   def addError(self, file: str, error: str) -> None:
     self.errors.append(SlideError(file, error))
-
-
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '', 
                    show_config: ShowConfig = ShowConfig()) -> None:
     for name in os.listdir(root_dir):
