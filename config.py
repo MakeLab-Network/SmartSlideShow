@@ -2,7 +2,45 @@ import os, sys, copy, random, time, datetime, abc, typing, enum, dataclasses
 #from PIL import Image
 from kivy import App, Widget, ScreenManager, Builder
 from dataclasses import dataclass
-from typing import Self, List, Set
+from typing import Self, List, Set, Optional
+from abc import ABC, abstractmethod
+
+class FileSystemAccess(ABC):
+    @abstractmethod
+    def list_dir(self, path: str) -> List[str]:
+        pass
+
+    @abstractmethod
+    def is_dir(self, path: str) -> bool:
+        pass
+
+    @abstractmethod
+    def get_file_suffix(self, path: str) -> str:
+        pass
+
+    @abstractmethod
+    def get_file_modification_time(self, path: str) -> datetime.datetime:
+        pass
+
+    @abstractmethod
+    def get_current_date(self) -> datetime.date:
+        pass
+
+class NormalFileSystemAccess(FileSystemAccess):
+    def list_dir(self, path: str) -> List[str]:
+        return os.listdir(path)
+
+    def is_dir(self, path: str) -> bool:
+        return os.path.isdir(path)
+
+    def get_file_suffix(self, path: str) -> str:
+        return os.path.splitext(path)[1]
+
+    def get_file_modification_time(self, path: str) -> datetime.datetime:
+        return datetime.datetime.fromtimestamp(os.path.getmtime(path))
+
+    def get_current_date(self) -> datetime.date:
+        return datetime.date.today()
 
 
 image_suffixes : Set[str] = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", ".tif"}
