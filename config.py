@@ -198,7 +198,9 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
               raise ValueError("File suffix " + suffix + " is not an image suffix")
             new_config.override(parseFileNameForConfig(path,
                                                 datetime.datetime.fromtimestamp(os.path.getmtime(path))))
-            slide_collection.addSlide(relative_path_name, new_config)
+            # Check if the expireDate of the show_config is greater than or equal to the current date
+            if new_config.expireDate and new_config.expireDate.date() >= datetime.date.today():
+              slide_collection.addSlide(relative_path_name, new_config)
           except ValueError as e:
             slide_collection.addError(relative_path_name, str(e))
 
