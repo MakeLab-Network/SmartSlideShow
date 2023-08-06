@@ -48,14 +48,18 @@ class TestFileSystemAccess(FileSystemAccess):
         return self.current_time.date()
 
     def _find_node(self, path: str) -> FileSim:
-        parts = path.split('/')
+        path_parts = path.split('/')
+        root_parts = self.root.name.split('/')
+        # Ignore the prefix of the root node
+        for i in range(len(root_parts)):
+            if path_parts[i] != root_parts[i]:
+                return None
         node = self.root
-        for part in parts:
-            if part == node.name:
-                for child in node.children:
-                    if child.name == part:
-                        node = child
-                        break
-                else:
-                    return None
+        for part in path_parts[len(root_parts):]:
+            for child in node.children:
+                if child.name == part:
+                    node = child
+                    break
+            else:
+                return None
         return node
