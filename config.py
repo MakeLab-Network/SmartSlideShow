@@ -174,7 +174,7 @@ class SlidesCollection:
     if isinstance(new_config.specializedConfig, ChooseSlideConfig):
       if new_config.specializedConfig.weight not in self.normalSlides:
         self.normalSlides[new_config.specializedConfig.weight] = []
-      self.normalSlides[new_config.specializedConfig.weight].\
+      self.normalSlides[new_config.specializedConfig.weight]\
         .append(NormalSlideCollection(file, new_config.duration))
     else:
       self.overshadowSlides.append(OvershadowSlideCollection(file, 
@@ -213,9 +213,13 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
               slide_collection.addExpiredSlide(relative_path_name)
           except ValueError as e:
             slide_collection.addError(relative_path_name, str(e))
-  return slide_count
+  
+  #check that slide count is not greater than maxSlides
+  if show_config.maxSlides and slide_count > show_config.maxSlides:
+    raise ValueError("Slide count " + str(slide_count) + " is greater than the maximum set")
 
-      
+  return slide_count
+        
       
     
     
