@@ -216,7 +216,8 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
   
   #check that slide count is not greater than maxSlides
   if show_config.maxSlides and slide_count > show_config.maxSlides:
-    raise ValueError("Slide count " + str(slide_count) + " is greater than the maximum set")
+    slide_collection.addError(relative_path,
+                              "Slide count " + str(slide_count) + " is greater than the maximum set")
 
   return slide_count
         
