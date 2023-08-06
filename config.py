@@ -233,8 +233,6 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
 
       if fs_access.is_dir(path):
           # If path is a directory, recurse into it
-          slide_count += collect_slides(slide_collection, path, relative_path_name, show_config.deep_copy(), fs_access)
-      else:
           new_config : ShowConfig = show_config.deep_copy()            
           try:
             #extract file suffix
@@ -245,12 +243,14 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
                                                 fs_access.get_file_modification_time(path)))
             # Check if the expireDate of the show_config is greater than or equal to the current date
             if new_config.expireDate and new_config.expireDate.date() >= fs_access.get_current_date():
-              slide_collection.addSlide(relative_path_name, new_config)
-              slide_count += 1
+              slide_count += collect_slides(slide_collection, path, relative_path_name, new_config, fs_access)
             else:
               slide_collection.addExpiredSlide(relative_path_name)
           except ValueError as e:
             slide_collection.addError(relative_path_name, str(e))
+      else:
+          slide_collection.addSlide(relative_path_name, show_config)
+          slide_count += 1
   
   #check that slide count is not greater than maxSlides
   if show_config.maxSlides and slide_count > show_config.maxSlides:

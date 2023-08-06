@@ -66,13 +66,13 @@ class TestFileSystemAccess(FileSystemAccess):
     def test_normal_slides(self):
         # Prepare a TestFileSystemAccess
         root = FileSim('root', True, [
-            FileSim('dir1@wg1', True, [
-                FileSim('slide1@dur5.jpg', False, mod_time=datetime.now()),
-                FileSim('slide2@dur7.jpg', False, mod_time=datetime.now())
+            FileSim('dir1@wg1@dur5', True, [
+                FileSim('slide1.jpg', False, mod_time=datetime.now()),
+                FileSim('slide2.jpg', False, mod_time=datetime.now())
             ]),
-            FileSim('dir2@wg1.5', True, [
-                FileSim('slide3@dur5.jpg', False, mod_time=datetime.now()),
-                FileSim('slide4@dur7.jpg', False, mod_time=datetime.now())
+            FileSim('dir2@wg1.5@dur7', True, [
+                FileSim('slide3.jpg', False, mod_time=datetime.now()),
+                FileSim('slide4.jpg', False, mod_time=datetime.now())
             ])
         ])
         fs_access = TestFileSystemAccess(root, datetime.now())
