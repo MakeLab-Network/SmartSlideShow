@@ -165,8 +165,9 @@ class NormalSlideCollection:
 @dataclass
 class SlidesCollection:
   normalSlides: OrderedDict[float, List[NormalSlideCollection]]
-  overshadowSlides: List[OvershadowSlideCollection]
-  errors: List[SlideError]
+  overshadowSlides: List[OvershadowSlideCollection] = []
+  errors: List[SlideError] = []
+  expired_slides: List[str] = []
   def addSlide(self, file: str, show_config: ShowConfig) -> None:
     new_config : ShowConfig = show_config.deep_copy()
     new_config.fillUnspecifiedShowConfigWithDefaults()
@@ -179,6 +180,9 @@ class SlidesCollection:
   
   def addError(self, file: str, error: str) -> None:
     self.errors.append(SlideError(file, error))
+  
+  def addExpiredSlide(self, file: str) -> None:
+    self.expired_slides.append(file)
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '', 
                    show_config: ShowConfig = ShowConfig()) -> None:
@@ -201,6 +205,8 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
             # Check if the expireDate of the show_config is greater than or equal to the current date
             if new_config.expireDate and new_config.expireDate.date() >= datetime.date.today():
               slide_collection.addSlide(relative_path_name, new_config)
+            else:
+              slide_collection.addExpiredSlide(relative_path_name)
           except ValueError as e:
             slide_collection.addError(relative_path_name, str(e))
 
