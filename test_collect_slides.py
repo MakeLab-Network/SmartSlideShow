@@ -2,6 +2,9 @@ from config import collect_slides, SlidesCollection, FileSystemAccess
 from typing import List, Dict, Tuple, Optional, Union
 from dataclasses import dataclass
 import datetime
+from typing import List
+from datetime import datetime
+from config import FileSystemAccess
 
 @dataclass
 class FileSim:
@@ -9,10 +12,6 @@ class FileSim:
     datetime: datetime.datetime
     subtree: List['FileSim'] | None = None
 
-  
-  from typing import List
-from datetime import datetime
-from config import FileSystemAccess
 
 class FileSim:
     def __init__(self, name: str, is_dir: bool, children=None, mod_time: datetime = datetime.now()):
