@@ -79,7 +79,7 @@ class TestFileSystemAccess(FileSystemAccess):
 
         # Call the collect function
         slide_collection = SlidesCollection()
-        collect_slides(slide_collection, 'root', fs_access=fs_access)
+        collect_slides(slide_collection, '/root/aaa', fs_access=fs_access)
 
         # Verify the result
         self.assertEqual(len(slide_collection.normalSlides), 2)
