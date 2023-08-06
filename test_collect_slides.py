@@ -63,19 +63,24 @@ class TestFileSystemAccess(FileSystemAccess):
                 return None
         return node
 
-    def test_normal_slides1(self):
+    def test_expired_slides(self):
         # Prepare a TestFileSystemAccess
+        current_time = datetime.now()
         root = FileSim('/root/aaa', True, [
-            FileSim('dir1@wg1@dur5', True, [
-                FileSim('slide1.jpg', False, mod_time=datetime.now()),
-                FileSim('slide2.jpg', False, mod_time=datetime.now())
+            FileSim('dir1@till' + (current_time - timedelta(days=1)).strftime('%d%m%Y'), True, [
+                FileSim('slide1.jpg', False, mod_time=current_time),
+                FileSim('slide2.jpg', False, mod_time=current_time)
             ]),
-            FileSim('dir2@wg1.5@dur7', True, [
-                FileSim('slide3.jpg', False, mod_time=datetime.now()),
-                FileSim('slide4.jpg', False, mod_time=datetime.now())
+            FileSim('dir2@till' + (current_time + timedelta(days=1)).strftime('%d%m%y'), True, [
+                FileSim('slide3.jpg', False, mod_time=current_time),
+                FileSim('slide4.jpg', False, mod_time=current_time)
+            ]),
+            FileSim('dir3@till' + (current_time + timedelta(days=1)).strftime('%d%m'), True, [
+                FileSim('slide5.jpg', False, mod_time=current_time),
+                FileSim('slide6.jpg', False, mod_time=current_time)
             ])
         ])
-        fs_access = TestFileSystemAccess(root, datetime.now())
+        fs_access = TestFileSystemAccess(root, current_time)
 
         # Call the collect function
         slide_collection = SlidesCollection()
@@ -83,13 +88,15 @@ class TestFileSystemAccess(FileSystemAccess):
 
         # Verify the result
         self.assertEqual(len(slide_collection.normalSlides), 2)
+        self.assertEqual(len(slide_collection.expired_slides), 1)
+        self.assertEqual(slide_collection.expired_slides[0], 'dir1@till' + (current_time - timedelta(days=1)).strftime('%d%m%Y'))
         self.assertEqual(len(slide_collection.normalSlides[1.0]), 2)
         self.assertEqual(len(slide_collection.normalSlides[1.5]), 2)
-        self.assertEqual(slide_collection.normalSlides[1.0][0].file, 'dir1@wg1/slide1@dur5.jpg')
+        self.assertEqual(slide_collection.normalSlides[1.0][0].file, 'dir2@till' + (current_time + timedelta(days=1)).strftime('%d%m%y') + '/slide3.jpg')
         self.assertEqual(slide_collection.normalSlides[1.0][0].duration, datetime.timedelta(seconds=5))
-        self.assertEqual(slide_collection.normalSlides[1.0][1].file, 'dir1@wg1/slide2@dur7.jpg')
+        self.assertEqual(slide_collection.normalSlides[1.0][1].file, 'dir2@till' + (current_time + timedelta(days=1)).strftime('%d%m%y') + '/slide4.jpg')
         self.assertEqual(slide_collection.normalSlides[1.0][1].duration, datetime.timedelta(seconds=7))
-        self.assertEqual(slide_collection.normalSlides[1.5][0].file, 'dir2@wg1.5/slide3@dur5.jpg')
+        self.assertEqual(slide_collection.normalSlides[1.5][0].file, 'dir3@till' + (current_time + timedelta(days=1)).strftime('%d%m') + '/slide5.jpg')
         self.assertEqual(slide_collection.normalSlides[1.5][0].duration, datetime.timedelta(seconds=5))
-        self.assertEqual(slide_collection.normalSlides[1.5][1].file, 'dir2@wg1.5/slide4@dur7.jpg')
+        self.assertEqual(slide_collection.normalSlides[1.5][1].file, 'dir3@till' + (current_time + timedelta(days=1)).strftime('%d%m') + '/slide6.jpg')
         self.assertEqual(slide_collection.normalSlides[1.5][1].duration, datetime.timedelta(seconds=7))
