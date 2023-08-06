@@ -225,26 +225,26 @@ class SlidesCollection:
     self.expired_slides.append(file)
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '', 
-                   show_config: ShowConfig = ShowConfig()) -> int:
+                   show_config: ShowConfig = ShowConfig(), fs_access: FileSystemAccess = NormalFileSystemAccess()) -> int:
   slide_count = 0
-  for name in os.listdir(root_dir):
+  for name in fs_access.list_dir(root_dir):
       path: str = os.path.join(root_dir, name)
       relative_path_name: str = os.path.join(relative_path, name)
 
-      if os.path.isdir(path):
+      if fs_access.is_dir(path):
           # If path is a directory, recurse into it
-          slide_count += collect_slides(slide_collection, path, relative_path_name, show_config.deep_copy())
+          slide_count += collect_slides(slide_collection, path, relative_path_name, show_config.deep_copy(), fs_access)
       else:
           new_config : ShowConfig = show_config.deep_copy()            
           try:
             #extract file suffix
-            suffix : str = os.path.splitext(path)[1]
+            suffix : str = fs_access.get_file_suffix(path)
             if suffix not in image_suffixes:
               raise ValueError("File suffix " + suffix + " is not an image suffix")
             new_config.override(parseFileNameForConfig(path,
-                                                datetime.datetime.fromtimestamp(os.path.getmtime(path))))
+                                                fs_access.get_file_modification_time(path)))
             # Check if the expireDate of the show_config is greater than or equal to the current date
-            if new_config.expireDate and new_config.expireDate.date() >= datetime.date.today():
+            if new_config.expireDate and new_config.expireDate.date() >= fs_access.get_current_date():
               slide_collection.addSlide(relative_path_name, new_config)
               slide_count += 1
             else:
