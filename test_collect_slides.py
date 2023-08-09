@@ -191,6 +191,38 @@ def test_expired_slides():
     assert slide6 is not None
 
 
+def test_overshadow_slides():
+    # Prepare a TestFileSystemAccess
+    root = FileSim('/root/aaa/', True, [
+        FileSim('dir1@freq8_10', True, [
+            FileSim('slide1.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
+            FileSim('slide2.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        ]),
+        FileSim('dir2@freq5_7_9', True, [
+            FileSim('slide3.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
+            FileSim('slide4.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
+            FileSim('slide5.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        ]),
+        FileSim('dir3@freq6', True, [
+            FileSim('slide6.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        ])
+    ])
+    fs_access = TestFileSystemAccess(root, datetime(2022, 1, 3, 13, 0))
+
+    # Call the collect function
+    slide_collection = SlidesCollection()
+    collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
+
+    # Verify the result
+    assert len(slide_collection.overshadowSlides) == 6
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10/slide1.jpg', 8) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10/slide2.jpg', 10) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide3.jpg', 5) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide4.jpg', 7) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide5.jpg', 9) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@freq6/slide6.jpg', 6) is not None
+
 if __name__ == '__main__':
     test_normal_slides1()
     test_expired_slides()
+    test_overshadow_slides()
