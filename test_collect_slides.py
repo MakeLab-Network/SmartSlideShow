@@ -67,7 +67,8 @@ def search_normal_slides(slides: List[NormalSlide], file: str, duration: datetim
     #use list comprehension to find all slides with the same filename and duration
     return [slide for slide in slides if slide.file == file and slide.duration == duration]
     
-def search_single_normal_slide(slides: List[NormalSlide], file: str, duration: datetime.timedelta) -> Optional[NormalSlide]
+def search_single_normal_slide(slides: List[NormalSlide], file: str,
+                               duration: datetime.timedelta) -> Optional[NormalSlide]:
     slides = search_normal_slides(slides, file, duration)
     assert len(slides) <= 1
     if len(slides) == 1:
@@ -102,10 +103,10 @@ def test_normal_slides1():
     assert slide1 is not None
     slide2 = search_single_normal_slide(slide_collection.normalSlides[1.0], 'dir1@wg1/slide2@dur7.jpg', datetime.timedelta(seconds=7))
     assert slide2 is not None
-    assert slide_collection.normalSlides[1.5][0].file == 'dir2@wg1.5/slide3@dur5.jpg'
-    assert slide_collection.normalSlides[1.5][0].duration == datetime.timedelta(seconds=5)
-    assert slide_collection.normalSlides[1.5][1].file == 'dir2@wg1.5/slide4@dur7.jpg'
-    assert slide_collection.normalSlides[1.5][1].duration == datetime.timedelta(seconds=7)
+    slide3 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir2@wg1.5/slide3@dur5.jpg', datetime.timedelta(seconds=5))
+    assert slide3 is not None
+    slide4 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir2@wg1.5/slide4@dur7.jpg', datetime.timedelta(seconds=7))
+    assert slide4 is not None
 
 def test_expired_slides():
     # Prepare a TestFileSystemAccess
@@ -140,10 +141,10 @@ def test_expired_slides():
     assert slide3 is not None
     slide4 = search_single_normal_slide(slide_collection.normalSlides[1.0], 'dir2@till' + (current_time + datetime.timedelta(days=1)).strftime('%d%m%y') + '/slide4.jpg', datetime.timedelta(seconds=7))
     assert slide4 is not None
-    assert slide_collection.normalSlides[1.5][0].file == 'dir3@till' + (current_time + datetime.timedelta(days=1)).strftime('%d%m') + '/slide5.jpg'
-    assert slide_collection.normalSlides[1.5][0].duration == datetime.timedelta(seconds=5)
-    assert slide_collection.normalSlides[1.5][1].file == 'dir3@till' + (current_time + datetime.timedelta(days=1)).strftime('%d%m') + '/slide6.jpg'
-    assert slide_collection.normalSlides[1.5][1].duration == datetime.timedelta(seconds=7)
+    slide5 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir3@till' + (current_time + datetime.timedelta(days=1)).strftime('%d%m') + '/slide5.jpg', datetime.timedelta(seconds=5))
+    assert slide5 is not None
+    slide6 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir3@till' + (current_time + datetime.timedelta(days=1)).strftime('%d%m') + '/slide6.jpg', datetime.timedelta(seconds=7))
+    assert slide6 is not None
 
 if __name__ == '__main__':
     test_normal_slides1()
