@@ -47,11 +47,10 @@ image_suffixes : Set[str] = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".tiff", "
 
 @dataclass
 class OvershadowConfig:
-  frequency : int = None
-  frequencyDecrement : int = None
+  frequencies : List[int] = None
   oneAtATime : bool = None
 
-defaultOvershadowConfig = OvershadowConfig(8, 3, True)
+defaultOvershadowConfig = OvershadowConfig([8], True)
 
 @dataclass
 class ChooseSlideConfig:
@@ -162,12 +161,12 @@ def parseFileNameForConfig(fileName: str, fileDate: datetime.datetime) -> ShowCo
     if configString[0:4] == "freq":
       cementSpecializedConfig(showConfig, True)
       freqStr : str = configString[4:]
-      # split on "_" to get frequency and decrement
+      # split on "_" to get frequencies
       freqStrs : List[str] = freqStr.split("_")
-      showConfig.specializedConfig.frequency : int = int(freqStrs[0])
-      # check if there is a decrement
-      if len(freqStrs) > 1:
-        showConfig.specializedConfig.frequencyDecrement : int = int(freqStrs[1])
+      showConfig.specializedConfig.frequencies : List[int] = [int(freq) for freq in freqStrs]
+      # check if there is at least one frequency
+      if len(showConfig.specializedConfig.frequencies) == 0:
+        raise ValueError("At least one frequency must be provided")
     
     if configString[0:3] == "all":
       cementSpecializedConfig(showConfig, True)
@@ -224,8 +223,9 @@ class SlidesCollection:
       self.normalSlides[new_config.specializedConfig.weight]\
         .append(NormalSlide(file, new_config.duration))
     else:
+      frequency_index = min(len(self.overshadowSlides), len(new_config.specializedConfig.frequencies) - 1)
       self.overshadowSlides.append(OvershadowSlideCollection(file, 
-                    new_config.specializedConfig.frequency, new_config.duration))
+                    new_config.specializedConfig.frequencies[frequency_index], new_config.duration))
   
   def addError(self, file: str, error: str) -> None:
     self.messages.append(SlideMessage(severity.ERROR, file, error))
