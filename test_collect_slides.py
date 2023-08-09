@@ -79,6 +79,35 @@ def search_single_normal_slide(slides: List[NormalSlide], file: str,
         return None
 
 
+def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str, frequency: int) -> List[OvershadowSlideCollection]:
+    # use list comprehension to find all overshadow slides with the same filename and frequency
+    return [slide for slide in slides if slide.file == file and slide.frequency == frequency]
+
+
+def search_single_overshadow_slide(slides: List[OvershadowSlideCollection], file: str,
+                                   frequency: int) -> Optional[OvershadowSlideCollection]:
+    slides = search_overshadow_slides(slides, file, frequency)
+    assert len(slides) <= 1
+    if len(slides) == 1:
+        return slides[0]
+    else:
+        return None
+
+
+def search_expired_slides(slides: List[str], file: str) -> List[str]:
+    # use list comprehension to find all expired slides with the same filename
+    return [slide for slide in slides if slide == file]
+
+
+def search_single_expired_slide(slides: List[str], file: str) -> Optional[str]:
+    slides = search_expired_slides(slides, file)
+    assert len(slides) <= 1
+    if len(slides) == 1:
+        return slides[0]
+    else:
+        return None
+
+
 def test_normal_slides1():
     # Prepare a TestFileSystemAccess
     root = FileSim('/root/aaa/', True, [
