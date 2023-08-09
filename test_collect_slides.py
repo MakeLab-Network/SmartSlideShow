@@ -170,8 +170,9 @@ def test_expired_slides():
     # Verify the result
     assert len(slide_collection.normalSlides) == 2
     assert len(slide_collection.expired_slides) == 1
-    assert slide_collection.expired_slides[0] == 'dir1@till' + (
-        current_time - timedelta(days=1)).strftime('%d%m%Y')
+    expired_slide = search_single_expired_slide(slide_collection.expired_slides, 'dir1@till' + (
+        current_time - timedelta(days=1)).strftime('%d%m%Y'))
+    assert expired_slide is not None
     assert len(slide_collection.normalSlides[1.0]) == 2
     assert len(slide_collection.normalSlides[1.5]) == 2
     slide3 = search_single_normal_slide(slide_collection.normalSlides[1.0], 'dir2@till' + (
