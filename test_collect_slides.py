@@ -1,9 +1,7 @@
 from config import collect_slides, SlidesCollection, NormalSlide, FileSystemAccess
 from typing import List, Dict, Tuple, Optional, Union
 from dataclasses import dataclass
-import datetime
-from typing import List
-from datetime import datetime
+from datetime import datetime, timedelta
 from config import FileSystemAccess
 
 
