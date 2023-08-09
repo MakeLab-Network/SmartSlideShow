@@ -245,7 +245,7 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
 
       if fs_access.is_dir(path):
           # If path is a directory, recurse into it
-          new_config : ShowConfig = show_config.deep_copy()            
+          new_config : ShowConfig = copy.deepcopy(show_config)            
           try:
             #extract file suffix
             suffix : str = fs_access.get_file_suffix(path)

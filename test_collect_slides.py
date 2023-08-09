@@ -51,7 +51,7 @@ class TestFileSystemAccess(FileSystemAccess):
         root_parts = self.root.name.split('/')
         # Ignore the prefix of the root node
         for i in range(len(root_parts)):
-            if path_parts[i] != root_parts[i]:
+            if path_parts[i] != root_parts[i] and root_parts[i] != '':
                 return None
         node = self.root
         for part in path_parts[len(root_parts):]:
@@ -97,6 +97,7 @@ def test_normal_slides1():
     slide_collection = SlidesCollection()
     collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
 
+    print(f"{slide_collection}\n")
     # Verify the result
     assert len(slide_collection.normalSlides) == 2
     assert len(slide_collection.normalSlides[1.0]) == 2
