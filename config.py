@@ -77,7 +77,7 @@ class ShowConfig:
       
 defaultShowConfig = ShowConfig(None, datetime.timedelta(seconds=5), None, defaultChooseSlideConfig)
 
-def fillUnspecifiedShowConfigWithDefaults(showConfig: ShowConfig):
+def fillUnspecifiedShowConfigWithDefaults(showConfig: ShowConfig) -> None :
   if not showConfig.expireDate:
     showConfig.expireDate = defaultShowConfig.expireDate
   if not showConfig.duration:
@@ -189,10 +189,17 @@ class OvershadowSlideCollection:
   frequency: int
   duration: datetime.timedelta
   
+class severity(enum.Enum):
+  INFO = 0
+  WARNING = 1
+  ERROR = 2
+  
 @dataclass
-class SlideError:
+class SlideMessage:
+  severity: severity
   file: str
   error: str
+  
 from collections import OrderedDict
 
 @dataclass
@@ -202,13 +209,15 @@ class NormalSlideCollection:
 
 @dataclass
 class SlidesCollection:
-  normalSlides: OrderedDict[float, List[NormalSlideCollection]]
-  overshadowSlides: List[OvershadowSlideCollection] = []
-  errors: List[SlideError] = []
-  expired_slides: List[str] = []
+  normalSlides: OrderedDict[float, List[NormalSlideCollection]] = \
+    dataclasses.field(default_factory=OrderedDict)
+  overshadowSlides: List[OvershadowSlideCollection] = \
+    dataclasses.field(default_factory=list)
+  messages: List[SlideMessage] = dataclasses.field(default_factory=list)
+  expired_slides: List[str] = dataclasses.field(default_factory=list)
   def addSlide(self, file: str, show_config: ShowConfig) -> None:
-    new_config : ShowConfig = show_config.deep_copy()
-    new_config.fillUnspecifiedShowConfigWithDefaults()
+    new_config : ShowConfig = copy.deepcopy(show_config)
+    fillUnspecifiedShowConfigWithDefaults(new_config)
     if isinstance(new_config.specializedConfig, ChooseSlideConfig):
       if new_config.specializedConfig.weight not in self.normalSlides:
         self.normalSlides[new_config.specializedConfig.weight] = []
@@ -219,7 +228,10 @@ class SlidesCollection:
                     new_config.specializedConfig.frequency, new_config.duration))
   
   def addError(self, file: str, error: str) -> None:
-    self.errors.append(SlideError(file, error))
+    self.messages.append(SlideMessage(severity.ERROR, file, error))
+  
+  def addWarning(self, file: str, warning: str) -> None:
+    self.messages.append(SlideMessage(severity.ERROR, file, warning))
   
   def addExpiredSlide(self, file: str) -> None:
     self.expired_slides.append(file)
@@ -238,7 +250,7 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
             #extract file suffix
             suffix : str = fs_access.get_file_suffix(path)
             if suffix not in image_suffixes:
-              raise ValueError("File suffix " + suffix + " is not an image suffix")
+              slide_collection.addWarning(path, "File suffix " + suffix + " is not an image suffix")
             new_config.override(parseFileNameForConfig(path,
                                                 fs_access.get_file_modification_time(path)))
             # Check if the expireDate of the show_config is greater than or equal to the current date

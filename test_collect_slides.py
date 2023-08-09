@@ -9,7 +9,7 @@ from config import FileSystemAccess
 @dataclass
 class FileSim:
     name: str
-    datetime: datetime.datetime
+    date_time: datetime
     subtree: List['FileSim'] | None = None
 
 
@@ -79,7 +79,7 @@ def test_normal_slides1():
 
     # Call the collect function
     slide_collection = SlidesCollection()
-    collect_slides(slide_collection, '/root/aaa', fs_access=fs_access)
+    collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
 
     # Verify the result
     assert len(slide_collection.normalSlides) == 2
@@ -97,7 +97,7 @@ def test_normal_slides1():
 def test_expired_slides():
     # Prepare a TestFileSystemAccess
     current_time = datetime.now()
-    root = FileSim('/root/aaa', True, [
+    root = FileSim('/root/aaa/', True, [
         FileSim('dir1@till' + (current_time - datetime.timedelta(days=1)).strftime('%d%m%Y'), True, [
             FileSim('slide1.jpg', False, mod_time=current_time),
             FileSim('slide2.jpg', False, mod_time=current_time)
