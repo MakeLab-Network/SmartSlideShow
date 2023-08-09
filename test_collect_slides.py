@@ -81,15 +81,15 @@ def test_normal_slides1():
     # Prepare a TestFileSystemAccess
     root = FileSim('/root/aaa', True, [
         FileSim('dir1@wg1@dur5', True, [
-            FileSim('slide1.jpg', False, mod_time=datetime.now()),
-            FileSim('slide2.jpg', False, mod_time=datetime.now())
+            FileSim('slide1.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
+            FileSim('slide2.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
         ]),
         FileSim('dir2@wg1.5@dur7', True, [
-            FileSim('slide3.jpg', False, mod_time=datetime.now()),
-            FileSim('slide4.jpg', False, mod_time=datetime.now())
+            FileSim('slide3.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
+            FileSim('slide4.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
         ])
     ])
-    fs_access = TestFileSystemAccess(root, datetime.now())
+    fs_access = TestFileSystemAccess(root, datetime(2022, 1, 3, 13, 0))
 
     # Call the collect function
     slide_collection = SlidesCollection()
@@ -110,7 +110,7 @@ def test_normal_slides1():
 
 def test_expired_slides():
     # Prepare a TestFileSystemAccess
-    current_time = datetime.now()
+    current_time = datetime(2022, 1, 3, 13, 0)
     root = FileSim('/root/aaa/', True, [
         FileSim('dir1@till' + (current_time - datetime.timedelta(days=1)).strftime('%d%m%Y'), True, [
             FileSim('slide1.jpg', False, mod_time=current_time),
