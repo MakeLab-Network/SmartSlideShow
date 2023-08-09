@@ -1,4 +1,4 @@
-from config import collect_slides, SlidesCollection, FileSystemAccess
+from config import collect_slides, SlidesCollection, NormalSlide, FileSystemAccess
 from typing import List, Dict, Tuple, Optional, Union
 from dataclasses import dataclass
 import datetime
@@ -72,7 +72,7 @@ def search_single_normal_slide(slides: List[NormalSlide], file: str, duration: d
     assert len(slides) <= 1
     if len(slides) == 1:
         return slides[0]
-    else len(slides) == 0:
+    else:
         return None
 
 
