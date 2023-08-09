@@ -178,7 +178,7 @@ def parseFileNameForConfig(fileName: str, fileDate: datetime.datetime) -> ShowCo
       showConfig.specializedConfig.oneAtATime : bool = True
 
 @dataclass
-class NormalSlideCollection:
+class NormalSlide:
   file: str
   weight: float
   duration: datetime.timedelta
@@ -203,13 +203,13 @@ class SlideMessage:
 from collections import OrderedDict
 
 @dataclass
-class NormalSlideCollection:
+class NormalSlide:
   file: str
   duration: datetime.timedelta
 
 @dataclass
 class SlidesCollection:
-  normalSlides: OrderedDict[float, List[NormalSlideCollection]] = \
+  normalSlides: OrderedDict[float, List[NormalSlide]] = \
     dataclasses.field(default_factory=OrderedDict)
   overshadowSlides: List[OvershadowSlideCollection] = \
     dataclasses.field(default_factory=list)
@@ -222,7 +222,7 @@ class SlidesCollection:
       if new_config.specializedConfig.weight not in self.normalSlides:
         self.normalSlides[new_config.specializedConfig.weight] = []
       self.normalSlides[new_config.specializedConfig.weight]\
-        .append(NormalSlideCollection(file, new_config.duration))
+        .append(NormalSlide(file, new_config.duration))
     else:
       self.overshadowSlides.append(OvershadowSlideCollection(file, 
                     new_config.specializedConfig.frequency, new_config.duration))

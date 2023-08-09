@@ -63,6 +63,19 @@ class TestFileSystemAccess(FileSystemAccess):
                 return None
         return node
 
+def search_normal_slides(slides: List[NormalSlide], file: str, duration: datetime.timedelta) -> List[NormalSlide]
+    #use list comprehension to find all slides with the same filename and duration
+    pass
+    
+def search_single_normal_slide(slides: List[NormalSlide], file: str, duration: datetime.timedelta) -> Optional[NormalSlide]
+    slides = search_normal_slides(slides, file, duration)
+    assert len(slides) <= 1
+    if len(slides) == 1:
+        return slides[0]
+    else len(slides) == 0:
+        return None
+
+
 def test_normal_slides1():
     # Prepare a TestFileSystemAccess
     root = FileSim('/root/aaa', True, [
