@@ -150,7 +150,9 @@ def test_expired_slides():
     root = FileSim('/root/aaa/', True, [
         FileSim('dir1@till' + (current_time - timedelta(days=1)).strftime('%d%m%Y'), True, [
             FileSim('slide1.jpg', False, mod_time=current_time),
-            FileSim('slide2.jpg', False, mod_time=current_time)
+            FileSim('slide2.jpg', False, mod_time=current_time),
+            FileSim('slide3.jpg', False, mod_time=current_time),
+            FileSim('slide4.jpg', False, mod_time=current_time)
         ]),
         FileSim('dir2@till' + (current_time + timedelta(days=1)).strftime('%d%m%y'), True, [
             FileSim('slide3.jpg', False, mod_time=current_time),
