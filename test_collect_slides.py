@@ -7,27 +7,28 @@ from datetime import datetime, timedelta
 @dataclass
 class FileSim:
     name: str
+    is_dir: bool
     date_time: datetime
     subtree: List['FileSim'] | None = None
 
-
+'''
 class FileSim:
     def __init__(self, name: str, is_dir: bool, children=None, mod_time: datetime = datetime.now()):
         self.name = name
         self.is_dir = is_dir
         self.children = children if children else []
         self.mod_time = mod_time
-
+'''
 
 class TestFileSystemAccess(FileSystemAccess):
-    def __init__(self, root: FileSim, current_time: datetime):
+    def __init__(self, root: FileSim, current_date: datetime):
         self.root = root
-        self.current_time = current_time
+        self.current_date = current_date
 
     def list_dir(self, path: str) -> List[str]:
-        node = self._find_node(path)
+        node: FileSim = self._find_node(path)
         if node and node.is_dir:
-            return [child.name for child in node.children]
+            return [child.name for child in node.subtree]
         else:
             return []
 
@@ -37,24 +38,40 @@ class TestFileSystemAccess(FileSystemAccess):
 
     def get_file_suffix(self, path: str) -> str:
         return '.' + path.split('.')[-1] if '.' in path else ''
+    
+    def get_file_main_name(self, path: str) -> str:
+        return path[0:path.rfind(".")] if '.' in path else path
 
     def get_file_modification_time(self, path: str) -> datetime:
         node = self._find_node(path)
-        return node.mod_time if node else None
+        return node.date_time if node else None
+
+    def join(self, path1: str, path2: str) -> str:
+        #remove trailing slash from path1
+        if path1 != '' and path1[-1] == '/':
+            path1 = path1[:-1]
+        #remove leading slash from path2
+        if path2 != '' and path2[0] == '/':
+            path2 = path2[1:]
+        return path1 + '/' + path2
 
     def get_current_date(self) -> datetime.date:
-        return self.current_time.date()
+        return self.current_date.date()
 
     def _find_node(self, path: str) -> FileSim:
         path_parts = path.split('/')
+        #remove empty parts
+        path_parts = [part for part in path_parts if part != '']
         root_parts = self.root.name.split('/')
+        #remove empty parts
+        root_parts = [part for part in root_parts if part != '']
         # Ignore the prefix of the root node
         for i in range(len(root_parts)):
-            if path_parts[i] != root_parts[i] and root_parts[i] != '':
+            if path_parts[i] != root_parts[i]:
                 return None
         node = self.root
         for part in path_parts[len(root_parts):]:
-            for child in node.children:
+            for child in node.subtree:
                 if child.name == part:
                     node = child
                     break
@@ -109,105 +126,106 @@ def search_single_expired_slide(slides: List[str], file: str) -> Optional[str]:
 
 def test_normal_slides1():
     # Prepare a TestFileSystemAccess
-    root = FileSim('/root/aaa/', True, [
-        FileSim('dir1@wg1@dur5', True, [
-            FileSim('slide1.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
-            FileSim('slide2.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+    date : datetime = datetime(2022, 1, 2, 13, 0)
+    root = FileSim('/root/aaa/', True, date, [
+        FileSim('dir1@wg1@dur5', True, date, [
+            FileSim('slide1.jpg', False, date),
+            FileSim('slide2.jpg', False, date)
         ]),
-        FileSim('dir2@wg1.5@dur7', True, [
-            FileSim('slide3.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
-            FileSim('slide4.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        FileSim('dir2@wg1_5@dur7', True, date, [
+            FileSim('slide3.jpg', False, date),
+            FileSim('slide4.jpg', False, date)
         ])
     ])
-    fs_access = TestFileSystemAccess(root, datetime(2022, 1, 3, 13, 0))
+    fs_access = TestFileSystemAccess(root, datetime(2022, 1, 3))
 
     # Call the collect function
     slide_collection = SlidesCollection()
     collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
-
-    print(f"{slide_collection}\n")
+    
     # Verify the result
     assert len(slide_collection.normalSlides) == 2
     assert len(slide_collection.normalSlides[1.0]) == 2
     assert len(slide_collection.normalSlides[1.5]) == 2
     slide1 = search_single_normal_slide(
-        slide_collection.normalSlides[1.0], 'dir1@wg1/slide1@dur5.jpg', timedelta(seconds=5))
+        slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide1.jpg', timedelta(seconds=5))
     assert slide1 is not None
     slide2 = search_single_normal_slide(
-        slide_collection.normalSlides[1.0], 'dir1@wg1/slide2@dur7.jpg', timedelta(seconds=7))
+        slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide2.jpg', timedelta(seconds=5))
     assert slide2 is not None
     slide3 = search_single_normal_slide(
-        slide_collection.normalSlides[1.5], 'dir2@wg1.5/slide3@dur5.jpg', timedelta(seconds=5))
+        slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide3.jpg', timedelta(seconds=7))
     assert slide3 is not None
     slide4 = search_single_normal_slide(
-        slide_collection.normalSlides[1.5], 'dir2@wg1.5/slide4@dur7.jpg', timedelta(seconds=7))
+        slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide4.jpg', timedelta(seconds=7))
     assert slide4 is not None
 
 
 def test_expired_slides():
     # Prepare a TestFileSystemAccess
-    current_time = datetime(2022, 1, 3, 13, 0)
-    root = FileSim('/root/aaa/', True, [
-        FileSim('dir1@till' + (current_time - timedelta(days=1)).strftime('%d%m%Y'), True, [
-            FileSim('slide1.jpg', False, mod_time=current_time),
-            FileSim('slide2.jpg', False, mod_time=current_time),
-            FileSim('slide3.jpg', False, mod_time=current_time),
-            FileSim('slide4.jpg', False, mod_time=current_time)
+    current_date = datetime(2022, 1, 2)
+    past: str = '@till1111'
+    present: str = '@till' + current_date.strftime('%d%m%y')
+    future: str = '@till' + (current_date + timedelta(days=1)).strftime('%d%m%Y')
+    
+    root = FileSim('/root/aaa/', True, current_date, [
+        FileSim('dir1@dur5' + past, True, current_date, [
+            FileSim('slide1.jpg', False, current_date),
+            FileSim('slide2.jpg', False, current_date),
+            FileSim('slide3.jpg', False, current_date),
+            FileSim('slide4.jpg', False, current_date)
         ]),
-        FileSim('dir2@till' + (current_time + timedelta(days=1)).strftime('%d%m%y'), True, [
-            FileSim('slide3.jpg', False, mod_time=current_time),
-            FileSim('slide4.jpg', False, mod_time=current_time)
+        FileSim('dir2@dur7' + present, True, current_date, [
+            FileSim('slide1.jpg', False, current_date),
+            FileSim('slide2.jpg', False, current_date)
         ]),
-        FileSim('dir3@till' + (current_time + timedelta(days=1)).strftime('%d%m'), True, [
-            FileSim('slide5.jpg', False, mod_time=current_time),
-            FileSim('slide6.jpg', False, mod_time=current_time)
+        FileSim('dir3@dur10' + future, True, current_date, [
+            FileSim('slide1.jpg', False, current_date),
+            FileSim('slide2.jpg', False, current_date)
         ])
     ])
-    fs_access = TestFileSystemAccess(root, current_time)
+    fs_access = TestFileSystemAccess(root, current_date)
 
     # Call the collect function
     slide_collection = SlidesCollection()
     collect_slides(slide_collection, '/root/aaa', fs_access=fs_access)
 
+    #print(slide_collection.normalSlides)
+
     # Verify the result
-    assert len(slide_collection.normalSlides) == 2
-    assert len(slide_collection.expired_slides) == 1
-    expired_slide = search_single_expired_slide(slide_collection.expired_slides, 'dir1@till' + (
-        current_time - timedelta(days=1)).strftime('%d%m%Y'))
-    assert expired_slide is not None
-    assert len(slide_collection.normalSlides[1.0]) == 2
-    assert len(slide_collection.normalSlides[1.5]) == 2
-    slide3 = search_single_normal_slide(slide_collection.normalSlides[1.0], 'dir2@till' + (
-        current_time + timedelta(days=1)).strftime('%d%m%y') + '/slide3.jpg', timedelta(seconds=5))
-    assert slide3 is not None
-    slide4 = search_single_normal_slide(slide_collection.normalSlides[1.0], 'dir2@till' + (
-        current_time + timedelta(days=1)).strftime('%d%m%y') + '/slide4.jpg', timedelta(seconds=7))
-    assert slide4 is not None
-    slide5 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir3@till' + (
-        current_time + timedelta(days=1)).strftime('%d%m') + '/slide5.jpg', timedelta(seconds=5))
-    assert slide5 is not None
-    slide6 = search_single_normal_slide(slide_collection.normalSlides[1.5], 'dir3@till' + (
-        current_time + timedelta(days=1)).strftime('%d%m') + '/slide6.jpg', timedelta(seconds=7))
-    assert slide6 is not None
+    assert len(slide_collection.normalSlides) == 1
+    assert len(slide_collection.normalSlides[1.0]) == 4
+    assert len(slide_collection.expired_slides) == 4
+    for i in range(1,5):
+        assert search_single_expired_slide(
+            slide_collection.expired_slides, 'dir1@dur5' + past + f'/slide{i}.jpg') is not None
+    for i in range(1,3):
+        assert search_single_normal_slide(
+            slide_collection.normalSlides[1.0], 'dir2@dur7' + present + f'/slide{i}.jpg',
+            timedelta(seconds=7)) is not None
+        assert search_single_normal_slide(
+            slide_collection.normalSlides[1.0], 'dir3@dur10' + future + f'/slide{i}.jpg',
+            timedelta(seconds=10)) is not None
 
 
 def test_overshadow_slides():
+    date = datetime(2022, 1, 2)
     # Prepare a TestFileSystemAccess
-    root = FileSim('/root/aaa/', True, [
-        FileSim('dir1@freq8_10', True, [
-            FileSim('slide1.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
-            FileSim('slide2.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+    root = FileSim('/root/aaa/', True, date, [
+        FileSim('dir1@freq8_10_12', True, date, [
+            FileSim('slide1.jpg', False, date),
+            FileSim('slide2.jpg', False, date)
         ]),
-        FileSim('dir2@freq5_7_9', True, [
-            FileSim('slide3.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
-            FileSim('slide4.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0)),
-            FileSim('slide5.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        FileSim('dir2@freq5_7', True, date, [
+            FileSim('slide3.jpg', False, date),
+            FileSim('slide4.jpg', False, date),
+            FileSim('slide5.jpg', False, date)
         ]),
-        FileSim('dir3@freq6', True, [
-            FileSim('slide6.jpg', False, mod_time=datetime(2022, 1, 3, 13, 0))
+        FileSim('dir3@freq6', True, date, [
+            FileSim('slide6.jpg', False, date)
         ])
     ])
-    fs_access = TestFileSystemAccess(root, datetime(2022, 1, 3, 13, 0))
+    fs_access = TestFileSystemAccess(root, date)
 
     # Call the collect function
     slide_collection = SlidesCollection()
@@ -215,11 +233,11 @@ def test_overshadow_slides():
 
     # Verify the result
     assert len(slide_collection.overshadowSlides) == 6
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10/slide1.jpg', 8) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10/slide2.jpg', 10) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide3.jpg', 5) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide4.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide5.jpg', 9) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10_12/slide1.jpg', 8) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10_12/slide2.jpg', 10) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7/slide3.jpg', 5) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7/slide4.jpg', 7) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide5.jpg', 7) is not None
     assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@freq6/slide6.jpg', 6) is not None
 
 if __name__ == '__main__':
