@@ -171,22 +171,24 @@ def parseFileNameForConfig(fileName: str, fileDate: datetime.datetime) -> ShowCo
       # replace _ with . to get weight
       showConfig.specializedConfig.weight : float = float(configString[2:].replace("_", "."))
       
-    if configString[0:4] == "freq":
-      cementSpecializedConfig(showConfig, True)
-      freqStr : str = configString[4:]
-      # split on "_" to get frequencies
-      freqStrs : List[str] = freqStr.split("_")
-      showConfig.specializedConfig.frequencies : List[int] = [int(freq) for freq in freqStrs]
-      # check if there is at least one frequency
-      if len(showConfig.specializedConfig.frequencies) == 0:
-        raise ValueError("At least one frequency must be provided")
+    #if configString[0:4] == "freq":
+    #  cementSpecializedConfig(showConfig, True)
     
     if configString[0:3] == "all":
       cementSpecializedConfig(showConfig, True)
       showConfig.specializedConfig.oneAtATime : bool = False
+      freqStr : str = configString[3:]
+      # split on "_" to get frequencies
+      freqStrs : List[str] = freqStr.split("_")
+      showConfig.specializedConfig.frequencies = [int(freq) for freq in freqStrs]
+      # check if there is at least one frequency
+      if len(showConfig.specializedConfig.frequencies) == 0:
+        raise ValueError("At least one frequency must be provided")
       
     if configString[0:6] == "single":
+      freqStr : str = configString[6:]
       cementSpecializedConfig(showConfig, True)
+      showConfig.specializedConfig.frequencies = [int(freqStr)]
       showConfig.specializedConfig.oneAtATime : bool = True
   return showConfig
 
