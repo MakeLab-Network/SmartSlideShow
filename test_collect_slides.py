@@ -86,22 +86,22 @@ def search_normal_slides(slides: List[NormalSlide], file: str, duration: timedel
 
 
 def assert_single_normal_slide(slides: List[NormalSlide], file: str,
-                               duration: timedelta) -> Optional[NormalSlide]:
+                               duration: timedelta) -> None:
     slides = search_normal_slides(slides, file, duration)
     assert len(slides) == 1
-    return slides[0]
 
 
-def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str, frequency: int) -> List[OvershadowSlideCollection]:
+def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str, frequency: int) -> \
+        List[OvershadowSlideCollection]:
     # use list comprehension to find all overshadow slides with the same filename and frequency
-    return [slide for slide in slides if slide.file == file and slide.frequency == frequency]
+    return [slide for slide in slides if file in slide.file and slide.frequency == frequency]
 
 
 def assert_single_overshadow_slide(slides: List[OvershadowSlideCollection], file: str,
-                                   frequency: int) -> Optional[OvershadowSlideCollection]:
+                                   frequency: int, bundle_size: int) -> None:
     slides = search_overshadow_slides(slides, file, frequency)
     assert len(slides) == 1
-    return slides[0]
+    assert len(slides[0].files) == bundle_size
 
 
 def search_expired_slides(slides: List[str], file: str) -> List[str]:
@@ -109,10 +109,9 @@ def search_expired_slides(slides: List[str], file: str) -> List[str]:
     return [slide for slide in slides if slide == file]
 
 
-def assert_single_expired_slide(slides: List[str], file: str) -> Optional[str]:
+def assert_single_expired_slide(slides: List[str], file: str) -> None:
     slides = search_expired_slides(slides, file)
     assert len(slides) == 1
-    return slides[0]
 
 
 def test_normal_slides1():
@@ -221,13 +220,13 @@ def test_overshadow_slides():
 
     # Verify the result
     assert len(slide_collection.overshadowSlides) == 7
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8, 1)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10, 1)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7, 1)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7, 1)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7, 1)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6, 2)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6, 2)
 
 if __name__ == '__main__':
     test_normal_slides1()

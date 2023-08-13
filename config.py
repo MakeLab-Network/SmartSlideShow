@@ -196,7 +196,6 @@ def parseFileNameForConfig(fileName: str, fileDate: datetime.datetime) -> ShowCo
 @dataclass
 class NormalSlide:
   file: str
-  weight: float
   duration: datetime.timedelta
 
 @dataclass
@@ -243,7 +242,7 @@ class SlidesCollection:
 #      overshadowSlideCollection.frequency = min(len(self.overshadowSlides), len(new_config.specializedConfig.frequencies) - 1)
 #      overshadowSlideCollection.files.append(OvershadowSlideCollection(remove_leading_slash(file), 
 #                    new_config.specializedConfig.frequencies[frequency], new_config.duration))
-      self.overshadowSlidesCollectoins
+      self.overshadowSlidesCollections.append(overshadowSlideCollection)
   
   def addError(self, file: str, error: str) -> None:
     self.messages.append(SlideMessage(severity.ERROR, remove_leading_slash(file), error))
