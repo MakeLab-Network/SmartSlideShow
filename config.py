@@ -4,6 +4,7 @@ import os, sys, copy, random, time, datetime, abc, typing, enum, dataclasses
 from dataclasses import dataclass
 from typing import Self, List, Set, Optional
 from abc import ABC, abstractmethod
+from collections import OrderedDict
 
 class FileSystemAccess(ABC):
     @abstractmethod
@@ -71,7 +72,7 @@ defaultOvershadowConfig = OvershadowConfig([8], True)
 class ChooseSlideConfig:
   weight : float = None
   
-defaultChooseSlideConfig = ChooseSlideConfig(1.0)
+defaultChooseSlideConfig: ChooseSlideConfig = ChooseSlideConfig(1.0)
 
 @dataclass
 class ShowConfig:
@@ -215,8 +216,6 @@ class SlideMessage:
   file: str
   error: str
   
-from collections import OrderedDict
-
 def remove_leading_slash(path: str) -> str:
   if path.startswith('/'):
     return path[1:]
@@ -224,15 +223,10 @@ def remove_leading_slash(path: str) -> str:
     return path
 
 @dataclass
-class NormalSlide:
-  file: str
-  duration: datetime.timedelta
-
-@dataclass
 class SlidesCollection:
   normalSlides: OrderedDict[float, List[NormalSlide]] = \
     dataclasses.field(default_factory=OrderedDict)
-  overshadowSlides: List[OvershadowSlideCollection] = \
+  overshadowSlidesCollections: List[OvershadowSlideCollection] = \
     dataclasses.field(default_factory=list)
   messages: List[SlideMessage] = dataclasses.field(default_factory=list)
   expired_slides: List[str] = dataclasses.field(default_factory=list)
@@ -245,9 +239,11 @@ class SlidesCollection:
       self.normalSlides[new_config.specializedConfig.weight]\
         .append(NormalSlide(remove_leading_slash(file), new_config.duration))
     else:
-      frequency_index = min(len(self.overshadowSlides), len(new_config.specializedConfig.frequencies) - 1)
-      self.overshadowSlides.append(OvershadowSlideCollection(remove_leading_slash(file), 
-                    new_config.specializedConfig.frequencies[frequency_index], new_config.duration))
+      overshadowSlideCollection : OvershadowSlideCollection = OvershadowSlideCollection([file], 0, new_config.duration)
+#      overshadowSlideCollection.frequency = min(len(self.overshadowSlides), len(new_config.specializedConfig.frequencies) - 1)
+#      overshadowSlideCollection.files.append(OvershadowSlideCollection(remove_leading_slash(file), 
+#                    new_config.specializedConfig.frequencies[frequency], new_config.duration))
+      self.overshadowSlidesCollectoins
   
   def addError(self, file: str, error: str) -> None:
     self.messages.append(SlideMessage(severity.ERROR, remove_leading_slash(file), error))
@@ -257,6 +253,22 @@ class SlidesCollection:
   
   def addExpiredSlide(self, file: str) -> None:
     self.expired_slides.append(remove_leading_slash(file))
+
+def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
+                                       sub_slide_collection: SlidesCollection,
+                                       config: ShowConfig) -> None:
+  overshadow_slide_collections : List[OvershadowSlideCollection] = sub_slide_collection.overshadowSlidesCollections
+  assert len(overshadow_slide_collections) == 1
+  files : List[str] = overshadow_slide_collections[0].files
+  frequency_idx: int = min(len(files), len(config.specializedConfig.frequencies) - 1)
+  new_config: ShowConfig = copy.deepcopy(config)
+  frequency = new_config.specializedConfig.frequencies[frequency_idx]
+  new_config.specializedConfig.frequencies = [frequency]
+
+  # add all files as a single overshadow slide collection
+  for file in sub_slide_collection.files:
+      slide_collection.addSlide(file, new_config)
+
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '', 
                    show_config: ShowConfig = ShowConfig(), fs_access: FileSystemAccess = NormalFileSystemAccess()) -> int:
@@ -270,8 +282,16 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
       new_config.override(parseFileNameForConfig(fs_access.get_file_main_name(name),
                                           fs_access.get_file_modification_time(full_file_name)))
       if fs_access.is_dir(full_file_name):
-          # If file is a directory, recurse into it
-          slide_count += collect_slides(slide_collection, root_dir, relative_file_name, new_config, fs_access)
+          # If file is a directory, recurse into it, but if in all overshadow mode, put it in a
+          # new slide collection
+          if (new_config.specializedConfig and isinstance(new_config.specializedConfig, OvershadowConfig) and
+               not new_config.specializedConfig.oneAtATime):
+
+            sub_slide_collection : SlidesCollection = SlidesCollection()
+            slide_count += collect_slides(sub_slide_collection, root_dir, relative_file_name, new_config, fs_access)
+            merge_overshadow_slide_collections(slide_collection, sub_slide_collection, new_config)
+          else:
+            slide_count += collect_slides(slide_collection, root_dir, relative_file_name, new_config, fs_access)
       else:
           try:
             #extract file suffix

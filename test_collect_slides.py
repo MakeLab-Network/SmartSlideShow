@@ -212,17 +212,18 @@ def test_overshadow_slides():
     date = datetime(2022, 1, 2)
     # Prepare a TestFileSystemAccess
     root = FileSim('/root/aaa/', True, date, [
-        FileSim('dir1@freq8_10_12', True, date, [
+        FileSim('dir1@all8_10_12', True, date, [
             FileSim('slide1.jpg', False, date),
             FileSim('slide2.jpg', False, date)
         ]),
-        FileSim('dir2@freq5_7', True, date, [
+        FileSim('dir2@all5_7', True, date, [
             FileSim('slide3.jpg', False, date),
             FileSim('slide4.jpg', False, date),
             FileSim('slide5.jpg', False, date)
         ]),
-        FileSim('dir3@freq6', True, date, [
-            FileSim('slide6.jpg', False, date)
+        FileSim('dir3@single6', True, date, [
+            FileSim('slide6.jpg', False, date),
+            FileSim('slide7.jpg', False, date)
         ])
     ])
     fs_access = TestFileSystemAccess(root, date)
@@ -232,13 +233,14 @@ def test_overshadow_slides():
     collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
 
     # Verify the result
-    assert len(slide_collection.overshadowSlides) == 6
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10_12/slide1.jpg', 8) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@freq8_10_12/slide2.jpg', 10) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7/slide3.jpg', 5) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7/slide4.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@freq5_7_9/slide5.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@freq6/slide6.jpg', 6) is not None
+    assert len(slide_collection.overshadowSlides) == 7
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6) is not None
+    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6) is not None
 
 if __name__ == '__main__':
     test_normal_slides1()
