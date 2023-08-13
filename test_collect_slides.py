@@ -85,14 +85,11 @@ def search_normal_slides(slides: List[NormalSlide], file: str, duration: timedel
     return [slide for slide in slides if slide.file == file and slide.duration == duration]
 
 
-def search_single_normal_slide(slides: List[NormalSlide], file: str,
+def assert_single_normal_slide(slides: List[NormalSlide], file: str,
                                duration: timedelta) -> Optional[NormalSlide]:
     slides = search_normal_slides(slides, file, duration)
-    assert len(slides) <= 1
-    if len(slides) == 1:
-        return slides[0]
-    else:
-        return None
+    assert len(slides) == 1
+    return slides[0]
 
 
 def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str, frequency: int) -> List[OvershadowSlideCollection]:
@@ -100,14 +97,11 @@ def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str,
     return [slide for slide in slides if slide.file == file and slide.frequency == frequency]
 
 
-def search_single_overshadow_slide(slides: List[OvershadowSlideCollection], file: str,
+def assert_single_overshadow_slide(slides: List[OvershadowSlideCollection], file: str,
                                    frequency: int) -> Optional[OvershadowSlideCollection]:
     slides = search_overshadow_slides(slides, file, frequency)
-    assert len(slides) <= 1
-    if len(slides) == 1:
-        return slides[0]
-    else:
-        return None
+    assert len(slides) == 1
+    return slides[0]
 
 
 def search_expired_slides(slides: List[str], file: str) -> List[str]:
@@ -115,13 +109,10 @@ def search_expired_slides(slides: List[str], file: str) -> List[str]:
     return [slide for slide in slides if slide == file]
 
 
-def search_single_expired_slide(slides: List[str], file: str) -> Optional[str]:
+def assert_single_expired_slide(slides: List[str], file: str) -> Optional[str]:
     slides = search_expired_slides(slides, file)
-    assert len(slides) <= 1
-    if len(slides) == 1:
-        return slides[0]
-    else:
-        return None
+    assert len(slides) == 1
+    return slides[0]
 
 
 def test_normal_slides1():
@@ -147,18 +138,14 @@ def test_normal_slides1():
     assert len(slide_collection.normalSlides) == 2
     assert len(slide_collection.normalSlides[1.0]) == 2
     assert len(slide_collection.normalSlides[1.5]) == 2
-    slide1 = search_single_normal_slide(
+    slide1 = assert_single_normal_slide(
         slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide1.jpg', timedelta(seconds=5))
-    assert slide1 is not None
-    slide2 = search_single_normal_slide(
+    slide2 = assert_single_normal_slide(
         slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide2.jpg', timedelta(seconds=5))
-    assert slide2 is not None
-    slide3 = search_single_normal_slide(
+    slide3 = assert_single_normal_slide(
         slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide3.jpg', timedelta(seconds=7))
-    assert slide3 is not None
-    slide4 = search_single_normal_slide(
+    slide4 = assert_single_normal_slide(
         slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide4.jpg', timedelta(seconds=7))
-    assert slide4 is not None
 
 
 def test_expired_slides():
@@ -197,15 +184,15 @@ def test_expired_slides():
     assert len(slide_collection.normalSlides[1.0]) == 4
     assert len(slide_collection.expired_slides) == 4
     for i in range(1,5):
-        assert search_single_expired_slide(
-            slide_collection.expired_slides, 'dir1@dur5' + past + f'/slide{i}.jpg') is not None
+        assert_single_expired_slide(
+            slide_collection.expired_slides, 'dir1@dur5' + past + f'/slide{i}.jpg')
     for i in range(1,3):
-        assert search_single_normal_slide(
+        assert_single_normal_slide(
             slide_collection.normalSlides[1.0], 'dir2@dur7' + present + f'/slide{i}.jpg',
-            timedelta(seconds=7)) is not None
-        assert search_single_normal_slide(
+            timedelta(seconds=7))
+        assert_single_normal_slide(
             slide_collection.normalSlides[1.0], 'dir3@dur10' + future + f'/slide{i}.jpg',
-            timedelta(seconds=10)) is not None
+            timedelta(seconds=10))
 
 
 def test_overshadow_slides():
@@ -234,13 +221,13 @@ def test_overshadow_slides():
 
     # Verify the result
     assert len(slide_collection.overshadowSlides) == 7
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6) is not None
-    assert search_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6) is not None
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6)
+    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6)
 
 if __name__ == '__main__':
     test_normal_slides1()
