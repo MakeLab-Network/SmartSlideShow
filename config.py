@@ -1,12 +1,20 @@
+# Importing necessary libraries
 import os, sys, copy, random, time, datetime, abc, typing, enum, dataclasses
+# PIL and kivy libraries are commented out as they are not currently in use
 #from PIL import Image
 #from kivy import App, Widget, ScreenManager, Builder
+# Importing dataclass for creating data classes
 from dataclasses import dataclass
+# Importing typing for type hinting
 from typing import Self, List, Set, Optional
+# Importing ABC and abstractmethod for creating abstract base classes and abstract methods
 from abc import ABC, abstractmethod
+# Importing OrderedDict for creating ordered dictionary
 from collections import OrderedDict
 
+# Abstract base class for file system access
 class FileSystemAccess(ABC):
+    # Abstract method to list directories
     @abstractmethod
     def list_dir(self, path: str) -> List[str]:
         pass
@@ -36,7 +44,9 @@ class FileSystemAccess(ABC):
         pass
     
 
+# Class for normal file system access, inherits from FileSystemAccess
 class NormalFileSystemAccess(FileSystemAccess):
+    # Method to list directories
     def list_dir(self, path: str) -> List[str]:
         return os.listdir(path)
 
