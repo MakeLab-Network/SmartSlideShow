@@ -135,7 +135,8 @@ def fill_unspecified_show_config_with_defaults(show_config: ShowConfig) -> None:
             show_config.specialized_config.weight = default_choose_slide_config.weight
 
 
-def expire_date_from_file_date_and_string(file_date: datetime.datetime, expire_date_string: str) -> datetime.datetime:
+def expire_date_from_file_date_and_string(file_date: datetime.datetime, expire_date_string: str) -> \
+                                            datetime.datetime:
     if len(expire_date_string) == 8:
         return datetime.datetime.strptime(expire_date_string, "%d%m%Y")
     elif len(expire_date_string) == 6:
@@ -188,8 +189,9 @@ def parse_file_name_for_config(filename: str, file_date: datetime.datetime) -> S
         configString: str = configString.lower()
         # check for expiration date
         if configString[0:4] == "till":
-            show_config.expire_after_date: datetime.datetime = expire_date_from_file_date_and_string(
-                file_date, configString[4:])
+            show_config.expire_after_date: datetime.datetime = \
+                expire_date_from_file_date_and_string(
+                    file_date, configString[4:])
         if configString[0:3] == "dur":
             show_config.duration: datetime.timedelta = datetime.timedelta(
                 seconds=int(configString[3:]))
@@ -299,7 +301,8 @@ class SlidesCollection:
 def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
                                        sub_slide_collection: SlidesCollection,
                                        config: ShowConfig) -> None:
-    overshadow_slide_collections: List[OvershadowSlideCollection] = sub_slide_collection.overshadow_slide_collections
+    overshadow_slide_collections: List[OvershadowSlideCollection] = \
+        sub_slide_collection.overshadow_slide_collections
 
     files: List[str] = []
     for overshadow_slide_collection in overshadow_slide_collections:
@@ -316,7 +319,8 @@ def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
 
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '',
-                   show_config: ShowConfig = ShowConfig(), fs_access: FileSystemAccess = NormalFileSystemAccess()) -> int:
+                   show_config: ShowConfig = ShowConfig(), 
+                   fs_access: FileSystemAccess = NormalFileSystemAccess()) -> int:
     slide_count = 0
     dir_path: str = fs_access.join(root_dir, relative_path)
     for name in fs_access.list_dir(dir_path):
@@ -347,8 +351,10 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
                 if suffix not in image_suffixes:
                     slide_collection.add_warning(
                         relative_file_name, "File suffix " + suffix + " is not an image suffix")
-                # Check if the expire_after_date of the show_config is greater than or equal to the current date
-                if new_config.expire_after_date and new_config.expire_after_date.date() < fs_access.get_current_date():
+                # Check if the expire_after_date of the show_config 
+                # is greater than or equal to the current date
+                if new_config.expire_after_date and new_config.expire_after_date.date() < \
+                        fs_access.get_current_date():
                     slide_collection.add_expired_slide(relative_file_name)
                 else:
                     slide_collection.add_slide(relative_file_name, show_config)
@@ -359,6 +365,6 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
     # check that slide count is not greater than max_slides
     if show_config.max_slides and slide_count > show_config.max_slides:
         slide_collection.add_error(relative_path,
-                                   "Slide count " + str(slide_count) + " is greater than the maximum set")
+                                   f"Slide count {slide_count} is greater than the maximum set")
 
     return slide_count
