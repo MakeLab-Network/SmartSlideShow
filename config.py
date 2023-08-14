@@ -4,9 +4,6 @@ import copy
 import datetime
 import enum
 import dataclasses
-# PIL and kivy libraries are commented out as they are not currently in use
-# from PIL import Image
-# from kivy import App, Widget, ScreenManager, Builder
 # Importing dataclass for creating data classes
 from dataclasses import dataclass
 # Importing typing for type hinting
