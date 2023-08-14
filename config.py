@@ -76,7 +76,7 @@ class OvershadowConfig:
   frequencies : List[int] = None
   oneAtATime : bool = None
 
-defaultOvershadowConfig = OvershadowConfig([8], True)
+default_overshadow_config = OvershadowConfig([8], True)
 
 @dataclass
 class ChooseSlideConfig:
