@@ -82,7 +82,7 @@ default_overshadow_config = OvershadowConfig([8], True)
 class ChooseSlideConfig:
   weight : float = None
   
-defaultChooseSlideConfig: ChooseSlideConfig = ChooseSlideConfig(1.0)
+default_choose_slide_config: ChooseSlideConfig = ChooseSlideConfig(1.0)
 
 @dataclass
 class ShowConfig:
@@ -100,9 +100,9 @@ class ShowConfig:
     if other.specializedConfig:
       self.specializedConfig = other.specializedConfig
       
-defaultShowConfig = ShowConfig(None, datetime.timedelta(seconds=5), None, defaultChooseSlideConfig)
+default_show_config = ShowConfig(None, datetime.timedelta(seconds=5), None, default_choose_slide_config)
 
-def fillUnspecifiedShowConfigWithDefaults(showConfig: ShowConfig) -> None :
+def fill_unspecified_show_config_with_defaults(show_config: ShowConfig) -> None :
   if not showConfig.expireDate:
     showConfig.expireDate = defaultShowConfig.expireDate
   if not showConfig.duration:
@@ -121,7 +121,7 @@ def fillUnspecifiedShowConfigWithDefaults(showConfig: ShowConfig) -> None :
     if not showConfig.specializedConfig.weight:
       showConfig.specializedConfig.weight = defaultChooseSlideConfig.weight
       
-def expireDateFromFileDateAndString(fileDate: datetime.datetime, expireDateString: str) -> datetime.datetime:
+def expire_date_from_file_date_and_string(file_date: datetime.datetime, expire_date_string: str) -> datetime.datetime:
       if len(expireDateString) == 8:
         return datetime.datetime.strptime(expireDateString, "%d%m%Y")
       elif len(expireDateString) == 6:
