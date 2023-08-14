@@ -257,15 +257,16 @@ def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
                                        sub_slide_collection: SlidesCollection,
                                        config: ShowConfig) -> None:
   overshadow_slide_collections : List[OvershadowSlideCollection] = sub_slide_collection.overshadowSlidesCollections
-  assert len(overshadow_slide_collections) == 1
-  files : List[str] = overshadow_slide_collections[0].files
+  files : List[str] = []
+  for overshadow_slide_collection in overshadow_slide_collections:
+      files.extend(overshadow_slide_collection.files)
   frequency_idx: int = min(len(files), len(config.specializedConfig.frequencies) - 1)
   new_config: ShowConfig = copy.deepcopy(config)
   frequency = new_config.specializedConfig.frequencies[frequency_idx]
   new_config.specializedConfig.frequencies = [frequency]
 
   # add all files as a single overshadow slide collection
-  for file in sub_slide_collection.files:
+  for file in files:
       slide_collection.addSlide(file, new_config)
 
 
