@@ -1,7 +1,7 @@
-from config import collect_slides, SlidesCollection, NormalSlide, FileSystemAccess, OvershadowSlideCollection
-from typing import List, Dict, Tuple, Optional, Union
+from typing import List
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from config import collect_slides, SlidesCollection, NormalSlide, FileSystemAccess, OvershadowSlideCollection
 
 
 @dataclass
@@ -11,16 +11,11 @@ class FileSim:
     date_time: datetime
     subtree: List['FileSim'] | None = None
 
-'''
-class FileSim:
-    def __init__(self, name: str, is_dir: bool, children=None, mod_time: datetime = datetime.now()):
-        self.name = name
-        self.is_dir = is_dir
-        self.children = children if children else []
-        self.mod_time = mod_time
-'''
 
 class TestFileSystemAccess(FileSystemAccess):
+    root: FileSim
+    current_date: datetime
+
     def __init__(self, root: FileSim, current_date: datetime):
         self.root = root
         self.current_date = current_date
@@ -38,7 +33,7 @@ class TestFileSystemAccess(FileSystemAccess):
 
     def get_file_suffix(self, path: str) -> str:
         return '.' + path.split('.')[-1] if '.' in path else ''
-    
+
     def get_file_main_name(self, path: str) -> str:
         return path[0:path.rfind(".")] if '.' in path else path
 
@@ -47,10 +42,10 @@ class TestFileSystemAccess(FileSystemAccess):
         return node.date_time if node else None
 
     def join(self, path1: str, path2: str) -> str:
-        #remove trailing slash from path1
+        # remove trailing slash from path1
         if path1 != '' and path1[-1] == '/':
             path1 = path1[:-1]
-        #remove leading slash from path2
+        # remove leading slash from path2
         if path2 != '' and path2[0] == '/':
             path2 = path2[1:]
         return path1 + '/' + path2
@@ -60,10 +55,10 @@ class TestFileSystemAccess(FileSystemAccess):
 
     def _find_node(self, path: str) -> FileSim:
         path_parts = path.split('/')
-        #remove empty parts
+        # remove empty parts
         path_parts = [part for part in path_parts if part != '']
         root_parts = self.root.name.split('/')
-        #remove empty parts
+        # remove empty parts
         root_parts = [part for part in root_parts if part != '']
         # Ignore the prefix of the root node
         for i in range(len(root_parts)):
@@ -116,7 +111,7 @@ def assert_single_expired_slide(slides: List[str], file: str) -> None:
 
 def test_normal_slides1():
     # Prepare a TestFileSystemAccess
-    date : datetime = datetime(2022, 1, 2, 13, 0)
+    date: datetime = datetime(2022, 1, 2, 13, 0)
     root = FileSim('/root/aaa/', True, date, [
         FileSim('dir1@wg1@dur5', True, date, [
             FileSim('slide1.jpg', False, date),
@@ -132,19 +127,19 @@ def test_normal_slides1():
     # Call the collect function
     slide_collection = SlidesCollection()
     collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
-    
+
     # Verify the result
-    assert len(slide_collection.normalSlides) == 2
-    assert len(slide_collection.normalSlides[1.0]) == 2
-    assert len(slide_collection.normalSlides[1.5]) == 2
-    slide1 = assert_single_normal_slide(
-        slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide1.jpg', timedelta(seconds=5))
-    slide2 = assert_single_normal_slide(
-        slide_collection.normalSlides[1.0], 'dir1@wg1@dur5/slide2.jpg', timedelta(seconds=5))
-    slide3 = assert_single_normal_slide(
-        slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide3.jpg', timedelta(seconds=7))
-    slide4 = assert_single_normal_slide(
-        slide_collection.normalSlides[1.5], 'dir2@wg1_5@dur7/slide4.jpg', timedelta(seconds=7))
+    assert len(slide_collection.normal_slides) == 2
+    assert len(slide_collection.normal_slides[1.0]) == 2
+    assert len(slide_collection.normal_slides[1.5]) == 2
+    assert_single_normal_slide(
+        slide_collection.normal_slides[1.0], 'dir1@wg1@dur5/slide1.jpg', timedelta(seconds=5))
+    assert_single_normal_slide(
+        slide_collection.normal_slides[1.0], 'dir1@wg1@dur5/slide2.jpg', timedelta(seconds=5))
+    assert_single_normal_slide(
+        slide_collection.normal_slides[1.5], 'dir2@wg1_5@dur7/slide3.jpg', timedelta(seconds=7))
+    assert_single_normal_slide(
+        slide_collection.normal_slides[1.5], 'dir2@wg1_5@dur7/slide4.jpg', timedelta(seconds=7))
 
 
 def test_expired_slides():
@@ -152,8 +147,9 @@ def test_expired_slides():
     current_date = datetime(2022, 1, 2)
     past: str = '@till1111'
     present: str = '@till' + current_date.strftime('%d%m%y')
-    future: str = '@till' + (current_date + timedelta(days=1)).strftime('%d%m%Y')
-    
+    future: str = '@till' + \
+        (current_date + timedelta(days=1)).strftime('%d%m%Y')
+
     root = FileSim('/root/aaa/', True, current_date, [
         FileSim('dir1@dur5' + past, True, current_date, [
             FileSim('slide1.jpg', False, current_date),
@@ -176,21 +172,23 @@ def test_expired_slides():
     slide_collection = SlidesCollection()
     collect_slides(slide_collection, '/root/aaa', fs_access=fs_access)
 
-    #print(slide_collection.normalSlides)
+    # print(slide_collection.normal_slides)
 
     # Verify the result
-    assert len(slide_collection.normalSlides) == 1
-    assert len(slide_collection.normalSlides[1.0]) == 4
+    assert len(slide_collection.normal_slides) == 1
+    assert len(slide_collection.normal_slides[1.0]) == 4
     assert len(slide_collection.expired_slides) == 4
-    for i in range(1,5):
+    for i in range(1, 5):
         assert_single_expired_slide(
             slide_collection.expired_slides, 'dir1@dur5' + past + f'/slide{i}.jpg')
-    for i in range(1,3):
+    for i in range(1, 3):
         assert_single_normal_slide(
-            slide_collection.normalSlides[1.0], 'dir2@dur7' + present + f'/slide{i}.jpg',
+            slide_collection.normal_slides[1.0], 'dir2@dur7' +
+            present + f'/slide{i}.jpg',
             timedelta(seconds=7))
         assert_single_normal_slide(
-            slide_collection.normalSlides[1.0], 'dir3@dur10' + future + f'/slide{i}.jpg',
+            slide_collection.normal_slides[1.0], 'dir3@dur10' +
+            future + f'/slide{i}.jpg',
             timedelta(seconds=10))
 
 
@@ -219,14 +217,22 @@ def test_overshadow_slides():
     collect_slides(slide_collection, '/root/aaa/', fs_access=fs_access)
 
     # Verify the result
-    assert len(slide_collection.overshadowSlides) == 7
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide1.jpg', 8, 1)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir1@all_10_12/slide2.jpg', 10, 1)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide3.jpg', 7, 1)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide4.jpg', 7, 1)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir2@all5_7/slide5.jpg', 7, 1)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide6.jpg', 6, 2)
-    assert_single_overshadow_slide(slide_collection.overshadowSlides, 'dir3@single6/slide7.jpg', 6, 2)
+    assert len(slide_collection.overshadow_slide_collections) == 7
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir1@all_10_12/slide1.jpg', 8, 1)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir1@all_10_12/slide2.jpg', 10, 1)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir2@all5_7/slide3.jpg', 7, 1)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir2@all5_7/slide4.jpg', 7, 1)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir2@all5_7/slide5.jpg', 7, 1)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir3@single6/slide6.jpg', 6, 2)
+    assert_single_overshadow_slide(
+        slide_collection.overshadow_slide_collections, 'dir3@single6/slide7.jpg', 6, 2)
+
 
 if __name__ == '__main__':
     test_normal_slides1()
