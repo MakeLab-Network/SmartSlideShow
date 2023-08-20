@@ -297,7 +297,7 @@ class SlidesCollection:
     def add_expired_slide(self, file: str) -> None:
         self.expired_slides.append(remove_leading_slash(file))
 
-
+# this function is called when the overshadow slide collection is in one at a time mode
 def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
                                        sub_slide_collection: SlidesCollection,
                                        config: ShowConfig) -> None:
@@ -307,15 +307,10 @@ def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
     files: List[str] = []
     for overshadow_slide_collection in overshadow_slide_collections:
         files.extend(overshadow_slide_collection.files)
-    frequency_idx: int = min(len(files), len(
-        config.specialized_config.frequencies) - 1)
-    new_config: ShowConfig = copy.deepcopy(config)
-    frequency = new_config.specialized_config.frequencies[frequency_idx]
-    new_config.specialized_config.frequencies = [frequency]
 
     # add all files as a single overshadow slide collection
     for file in files:
-        slide_collection.add_slide(file, new_config)
+        slide_collection.add_slide(file, config)
 
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '',
@@ -333,14 +328,26 @@ def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_p
         if fs_access.is_dir(full_file_name):
             # If file is a directory, recurse into it, but if in all overshadow mode, put it in a
             # new slide collection
-            if (new_config.specialized_config and isinstance(new_config.specialized_config, OvershadowConfig) and
-                    not new_config.specialized_config.one_at_a_time):
-
-                sub_slide_collection: SlidesCollection = SlidesCollection()
-                slide_count += collect_slides(sub_slide_collection,
+            if new_config.specialized_config and isinstance(new_config.specialized_config, OvershadowConfig):
+                if new_config.specialized_config.one_at_a_time:
+                    sub_slide_collection: SlidesCollection = SlidesCollection()
+                    sub_slide += collect_slides(sub_slide_collection,
                                               root_dir, relative_file_name, new_config, fs_access)
-                merge_overshadow_slide_collections(
-                    slide_collection, sub_slide_collection, new_config)
+                    merge_overshadow_slide_collections(
+                        slide_collection, sub_slide_collection, new_config)
+                else: #all
+                    # calculate frequency based on sub_slide_count
+                    sub_slide_collection: SlidesCollection = SlidesCollection()
+                    sub_slide_count: int = collect_slides(slide_collection,
+                                                root_dir, relative_file_name, new_config, fs_access)
+                    frequency_idx: int = min(sub_slide_count, len(
+                        new_config.specialized_config.frequencies) - 1)
+                    frequency = new_config.specialized_config.frequencies[frequency_idx]
+                    # put in all slides in sub_slide_collection
+                    for overshadow_slide_collection in sub_slide_collection.overshadow_slide_collections:
+                        overshadow_slide_collection.frequency = frequency
+                        slide_collection.overshadow_slide_collections.append(
+                            overshadow_slide_collection)
             else:
                 slide_count += collect_slides(slide_collection,
                                               root_dir, relative_file_name, new_config, fs_access)
