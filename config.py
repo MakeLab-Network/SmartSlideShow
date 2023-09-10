@@ -284,6 +284,11 @@ class SlidesCollection:
             self.overshadow_slide_collections.append(
                 overshadow_slide_collection)
 
+    def add_one_at_a_time_slides(self, files: List[str], frequency: int, duration: datetime.timedelta) -> None:
+        overshadow_slide_collection: OvershadowSlideCollection = OvershadowSlideCollection(
+            files, frequency, duration)
+        self.overshadow_slide_collections.append(overshadow_slide_collection)
+
     def add_error(self, file: str, error: str) -> None:
         self.messages.append(SlideMessage(
             Severity.ERROR, remove_leading_slash(file), error))
@@ -307,9 +312,8 @@ def merge_overshadow_slide_collections(slide_collection: SlidesCollection,
         files.extend(overshadow_slide_collection.files)
 
     # add all files as a single overshadow slide collection
-    for file in files:
-        slide_collection.add_slide(file, config)
-
+    slide_collection.add_one_at_a_time_slides(files, config.specialized_config.frequencies[0],
+                                              config.duration)
 
 def collect_slides(slide_collection: SlidesCollection, root_dir: str, relative_path: str = '',
                    show_config: ShowConfig = ShowConfig(),
