@@ -89,9 +89,20 @@ def assert_single_normal_slide(slides: List[NormalSlide], file: str,
 def search_overshadow_slides(slides: List[OvershadowSlideCollection], file: str, frequency: int) -> \
         List[OvershadowSlideCollection]:
     # use list comprehension to find all overshadow slides with the same filename and frequency
-    return [slide for slide in slides if file in slide.file and slide.frequency == frequency]
-
-
+    return [slide for slide in slides if file in slide.files and slide.frequency == frequency]
+    '''
+    # for debugging intead of list comprehension
+    # create an empty list to store the matching slides
+    matching_slides = []
+    # iterate over each slide in the input list
+    for slide in slides:
+        # check if the file name is present in the slide's files attribute and if the frequency matches the input frequency
+        if file in slide.files and slide.frequency == frequency:
+            # if both conditions are true, add the slide to the matching_slides list
+            matching_slides.append(slide)
+    # return the list of matching slides
+    return matching_slides
+    '''
 def assert_single_overshadow_slide(slides: List[OvershadowSlideCollection], file: str,
                                    frequency: int, bundle_size: int) -> None:
     slides = search_overshadow_slides(slides, file, frequency)
@@ -219,9 +230,9 @@ def test_overshadow_slides():
     # Verify the result
     assert len(slide_collection.overshadow_slide_collections) == 7
     assert_single_overshadow_slide(
-        slide_collection.overshadow_slide_collections, 'dir1@all_10_12/slide1.jpg', 8, 1)
+        slide_collection.overshadow_slide_collections, 'dir1@all8_10_12/slide1.jpg', 10, 1)
     assert_single_overshadow_slide(
-        slide_collection.overshadow_slide_collections, 'dir1@all_10_12/slide2.jpg', 10, 1)
+        slide_collection.overshadow_slide_collections, 'dir1@all8_10_12/slide2.jpg', 10, 1)
     assert_single_overshadow_slide(
         slide_collection.overshadow_slide_collections, 'dir2@all5_7/slide3.jpg', 7, 1)
     assert_single_overshadow_slide(
